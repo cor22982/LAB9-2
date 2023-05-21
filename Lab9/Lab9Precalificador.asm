@@ -33,15 +33,24 @@ ExitProcess proto,dwExitCode:dword
     mes10 BYTE "Oct 2022:", 0
     mes11 BYTE "Nov 2022:", 0
 	mes12 BYTE "Dic 2022:", 0
-	
+	meses DWORD mes1,mes2, mes3, mes4, mes5, mes6, mes7, mes8, mes9, mes10, mes11, mes12
 
-    meses DWORD mes1,mes2, mes3, mes4, mes5, mes6, mes7, mes8, mes9, mes10, mes11, mes12
+    ;NITS numeros y formato
+    nitformat byte "  NIT: %d",0
+    nits DWORD 8925634,4568790,3098745,6723489,1254678,9876543,2345678,7834569,8901234,5432198,8765432,6543210
+
+    ;MONTOS
 	montos DWORD 0,0,0,0,0,0,0,0,0,0,0,0
+    monto byte "  Facturado: Q.%d.00",0
+    
+    ;ISR
 	isr DWORD 0,0,0,0,0,0,0,0,0,0,0,0
-	
+	iva byte "  IVA: Q.%d.00",0Ah,0
+
 	;formatos
 	fmt db "%s ",0
 	fmt2 db "%d",0Ah,0
+
 
 .code
     includelib libucrt.lib
@@ -77,15 +86,7 @@ lector:
     push 0
 
     mov esi,0
-imprimir:
-    mov eax,montos[esi*4]
-	push eax
-	push offset fmt2
-	call printf
-    inc esi
-    cmp esi,n
-    jne imprimir
-    push 0
+
 
     mov esi,0
     mov ebx,0
@@ -105,20 +106,37 @@ calculadora:
     push 0
 
     mov esi,0
-imprimir2:
-    mov eax,isr[esi*4]
-	push eax
-	push offset fmt2
-	call printf
-    inc esi
-    cmp esi,n
-    jne imprimir2
-    push 0
 
     mov eax,monto_anual
     push eax
     push offset fmt2
     call printf
+
+;Vamos a imprimir el formato
+    push 0
+    mov esi,0
+    mov ebx,0
+    mov eax,0
+printer:
+    mov eax,meses[esi*4] ;imprimirmos el mes
+    push eax
+    call printf
+    mov eax,nits[esi*4] ;imprimirmos el nit
+    push eax
+    push offset nitformat
+    call printf
+    mov eax,montos[esi*4] ;imprimimos los montos
+    push eax
+    push offset monto
+    call printf
+    mov eax,isr[esi*4] ;iprimirmos los iva
+    push eax
+    push offset iva
+    call printf
+    inc esi
+    cmp esi,n
+    jne printer
+    push 0
 
 
 ;COMPARAREMOS EN QUE REGIME ESTA
