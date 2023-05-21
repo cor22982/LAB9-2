@@ -12,6 +12,13 @@ ExitProcess proto,dwExitCode:dword
 
 .data
 	ingresar_montos byte "Ingrese el monto del mes ",0
+	n DWORD 12 ;numero de meses y facturas
+	monto_anual DWORD 0 ;este es el monto anual
+	pivote DWORD ?
+    
+    ;ADVERTENCIAS
+    adv1 byte "Aviso Siguiente mes fiscal Pequeño Contribuyente | MONTO ANUAL TOTAL: Q.%d.00",0Ah,0
+    adv2 byte "Aviso Siguiente mes fiscal Mediano Contribuyente | MONTO ANUAL TOTAL: Q.%d.00",0Ah,0
 
 	;MESES
 	mes1 BYTE  "Ene 2022:", 0
@@ -27,27 +34,14 @@ ExitProcess proto,dwExitCode:dword
     mes11 BYTE "Nov 2022:", 0
 	mes12 BYTE "Dic 2022:", 0
 	
-	;Montos
-	mt1 DWORD ?
-	mt2 DWORD ?
-	mt3 DWORD ?
-	mt4 DWORD ?
-	mt5 DWORD ?
-	mt6 DWORD ?
-	mt7 DWORD ?
-	mt8 DWORD ?
-	mt9 DWORD ?
-	mt10 DWORD ?
-	mt11 DWORD ?
-	mt12 DWORD ?
 
     meses DWORD mes1,mes2, mes3, mes4, mes5, mes6, mes7, mes8, mes9, mes10, mes11, mes12
-	montos DWORD mt1,mt2,mt3,mt4,mt5,mt6,mt7,mt8,mt9,mt10,mt11,mt12
+	montos DWORD 0,0,0,0,0,0,0,0,0,0,0,0
+	isr DWORD 0,0,0,0,0,0,0,0,0,0,0,0
 	
-	fmt db "%s ",0Ah,0
-	fmt2 db "%d", 0AH, 0
-	msg1 db "El array contiene los siguientes elementos:",0AH, 0
-	msg2 db "Fin del array",0AH, 0
+	;formatos
+	fmt db "%s ",0
+	fmt2 db "%d",0Ah,0
 
 .code
     includelib libucrt.lib
@@ -61,55 +55,94 @@ ExitProcess proto,dwExitCode:dword
 
 public main
 main proc
-	push offset msg1	; Guarda en pila el valor de dirección inicial de msg1
-	call printf			; Llamado a printf
-
-	mov esi, offset meses
-	mov ebx, sizeof	meses
-
-label1:
-	mov eax, [esi]		; DIRECCIONAM. INDIRECTO: Cargar el valor del i-esimo elem de array a eax 
-	push eax			; Pasar valor a pila p/imprimir
-	push offset fmt		; Pasar formato 
-	call printf
-
-	sub ebx, 4			; Decrementar "contador"
-	add esi, 4			; Moverse al sig. elem. del array
-	cmp ebx,0			; Aún hay elementos en el array?
-	jne label1			; Sí, entonces repetir proceso desde label1
-
-	push offset msg2	; Guarda en pila el valor de dirección inicial de msg2
-	call printf			; Llamado a printf
-
-	push 0
-
-	mov esi, offset montos
-	mov ebx, sizeof montos
-
+    mov esi,0
 lector:
-	push offset ingresar_montos
-    call printf  
-	
 
-	mov eax,[esi-4]
-    push eax            
-    push offset fmt2    
-    call scanf 
+    push offset ingresar_montos
+    call printf
+    mov ebx,meses[esi*4]
+    push ebx
+    push offset fmt
+    call printf
 
-	sub ebx, 4
-	add esi,4
-	cmp ebx,0
-	jne lector
-	push 0
+    lea eax,pivote
+    push eax
+    push offset fmt2
+    call scanf
+    mov eax,pivote
+    mov montos[esi*4],eax
+    inc esi
+    cmp esi,n
+    jne lector
+    push 0
 
-	
-	mov eax,mt2
+    mov esi,0
+imprimir:
+    mov eax,montos[esi*4]
 	push eax
 	push offset fmt2
-    call printf  
+	call printf
+    inc esi
+    cmp esi,n
+    jne imprimir
+    push 0
 
-    call exit           
+    mov esi,0
+    mov ebx,0
+calculadora:
+    mov eax,montos[esi*4]
+    add ebx,eax ;sumamos todos los montos
+    ;OPERAMOS
+    imul eax,5
+    mov ecx, 100
+    cdq
+    idiv ecx      
+    mov isr[esi*4],eax
+    inc esi
+    cmp esi,n
+    jne calculadora
+    mov monto_anual,ebx ; lo movemos a nuestra variable
+    push 0
 
+    mov esi,0
+imprimir2:
+    mov eax,isr[esi*4]
+	push eax
+	push offset fmt2
+	call printf
+    inc esi
+    cmp esi,n
+    jne imprimir2
+    push 0
+
+    mov eax,monto_anual
+    push eax
+    push offset fmt2
+    call printf
+
+
+;COMPARAREMOS EN QUE REGIME ESTA
+    cmp eax, 150000
+    ja lp1
+    jnae lp2
+
+
+lp1: 
+    mov eax,0
+    mov eax,monto_anual
+    push eax
+    push offset adv2
+    call printf
+    call exit
+lp2:
+    mov eax,0
+    mov eax,monto_anual
+    push eax
+    push offset adv1
+    call printf
+    call exit
+
+    
 
 main endp
 end
