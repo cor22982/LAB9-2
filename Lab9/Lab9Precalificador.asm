@@ -49,7 +49,7 @@ ExitProcess proto,dwExitCode:dword
 
 	;formatos
 	fmt db "%s ",0
-	fmt2 db "%d",0Ah,0
+	fmt2 db "%d",0
 
 
 .code
@@ -107,10 +107,7 @@ calculadora:
 
     mov esi,0
 
-    mov eax,monto_anual
-    push eax
-    push offset fmt2
-    call printf
+   
 
 ;Vamos a imprimir el formato
     push 0
