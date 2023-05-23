@@ -1,5 +1,5 @@
 ; Universidad del Valle de Guatemala
-; Mathew Cordero, 22982 - Jose de Leon,  22809 Grupo 4
+; Mathew Cordero, 22982 - Jose de Leon,  22809 Grupo 2
 ; Descripcion:
 ; El programa realiza una inspeccion de los impuestos ISR a tributar y el regimen para el proximo año fiscal
 ; 20/05/2023
@@ -18,7 +18,7 @@ ExitProcess proto,dwExitCode:dword
     
     ;ADVERTENCIAS
     adv1 byte "Aviso Siguiente mes fiscal Pequeño Contribuyente | MONTO ANUAL TOTAL: Q.%d.00",0Ah,0
-    adv2 byte "Aviso Siguiente mes fiscal Mediano Contribuyente | MONTO ANUAL TOTAL: Q.%d.00",0Ah,0
+    adv2 byte "Aviso Siguiente mes fiscal IVA General” | MONTO ANUAL TOTAL: Q.%d.00",0Ah,0
 
 	;MESES
 	mes1 BYTE  "Ene 2022:", 0
@@ -137,12 +137,14 @@ printer:
 
 
 ;COMPARAREMOS EN QUE REGIME ESTA
+    mov eax,monto_anual
     cmp eax, 150000
     ja lp1
     jnae lp2
 
 
 lp1: 
+    ;Imprime iva General
     mov eax,0
     mov eax,monto_anual
     push eax
@@ -150,6 +152,7 @@ lp1:
     call printf
     call exit
 lp2:
+    ;imprime pequeño contribuyente
     mov eax,0
     mov eax,monto_anual
     push eax
